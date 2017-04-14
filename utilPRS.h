@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/select.h>
+#include <sys/time.h>
 
 #define RCVSIZE 1024
 #define SEGSIZE 1006
@@ -17,10 +19,8 @@
 #define TRUE  1
 #define FALSE 0
 
-
 void handleError(int var, char *functionName);
-int initSocket(int* pValid, struct sockaddr_in* pAdresse, int port, int doBind);
-void sendSYN(int desc,struct sockaddr* pAdrr, int size, int type);
-void connexionServ(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int portUtil);
-int connexionClient(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr);
+int initSocket(int* pValid, struct sockaddr_in* pAdresse, int port);
+void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int privatePort);
+void ajoutDebut(char msg[], char read[], int seqNum);
 void sendFile(char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr);
