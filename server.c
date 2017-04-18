@@ -1,7 +1,7 @@
 #include "utilPRS.h"
 
 int main() {
-	printf("bite\n");
+	printf("salut\n");
 	struct sockaddr_in clientHS;
 	int publicPort = 2000;
 	int privatePort = publicPort;
