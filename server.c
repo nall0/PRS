@@ -2,6 +2,7 @@
 
 int main() {
 	printf("salut\n");
+	printf("salut salut\n");
 	struct sockaddr_in clientHS;
 	int publicPort = 2000;
 	int privatePort = publicPort;
