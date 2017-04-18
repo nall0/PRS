@@ -61,19 +61,14 @@ void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int priva
 }
 
 void ajoutDebut(char msg[], char read[], int seqNum) {
-	char charSeqNum[7];
-	sprintf(charSeqNum, "%d", seqNum); //convertion du numéro de sequence en string
-	strcpy(msg,"000000");
-	int i=0, j=6;
+	sprintf(msg, "%6d", seqNum);
+	strcat(msg, read);
 
-	//ajout du numero de sequence au début de msg
-	for(i=0; i<(int)strlen(charSeqNum); i++) {
-		msg[i+(6-(int)strlen(charSeqNum))] = charSeqNum[i];
-	}
-	//on ajoute ensuite le contenu lu dans le fichier
-	for(j=6; j<SEGSIZE; j++) {
-		msg[j] = read[j-6];
-	}
+	int i=0;
+	while(msg[i] == ' ') {
+		msg[i] = '0';
+		i++;
+	}	
 }
 
 void sendFile(char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {	
