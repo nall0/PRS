@@ -9,24 +9,28 @@ int main() {
 	socklen_t sizeClient = sizeof(client);
 	fd_set set, setACK;
 	int nbMaxClient = 100;
+	int ret; //retour du select
 	int descHS = initSocket(&enableOption, &clientHS, publicPort);
 	int desc;
 	char fileName[SEGSIZE];
+	int seqNum = 0;
 	char ackReceive[10];
+	int cwnd = 2; //fenetre d'envoi pour Slow Start
+	//int sstresh = 50; //seuil avant de passer en congestion avoidance
+	//int acquitte = 0;
 
 	while(1) {
 		FD_ZERO(&set);
 		FD_ZERO(&setACK);
 
-		FD_SET(descHS, &set);
-		FD_SET(desc, &set);
-		FD_SET(desc,&setACK);
+		FD_SET(descHS,&set);
 
-		int ret = select(3+nbMaxClient, &setACK, &set, NULL, NULL);
-
+		ret = select(3+nbMaxClient, &setACK, &set, NULL, NULL);
 		handleError(ret, "select");
+		printf("1\n");
 
 		if(FD_ISSET(descHS, &set) == TRUE) {
+			printf("nouveau client\n");
 			//a new client arrive
 			handshake(descHS, (struct sockaddr *)&clientHS, &sizeClientHS, ++privatePort);
 			printf("Handshake succeeded\nprivate port sent = %d\n",privatePort);
@@ -34,27 +38,42 @@ int main() {
 			//new socket declaration
 			socklen_t sizeClient = sizeof(client);
 			desc = initSocket(&enableOption, &client, privatePort);
+			FD_SET(desc, &set);
+			FD_SET(desc,&setACK);
 
-			printf ("get there\n");
-			//reception du nom et envoi du fichier
+			//reception du nom du fichier
 			recvfrom(desc,fileName,sizeof(fileName),0, (struct sockaddr *)&client,&sizeClient);
 			printf("Required file : |%s|\n", fileName);
 
-			FD_SET(desc, &set);
 		}
-
+		printf("2\n");
 		if(FD_ISSET(desc, &set) == TRUE) {
 			//socket ready to send things
-			sendFile(fileName, desc,(struct sockaddr *) &client, sizeClient);
+			sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
+			seqNum = seqNum + cwnd;
 
 		}
 
+		select(3+nbMaxClient, &setACK, &set, NULL, NULL);		
 		if(FD_ISSET(desc, &setACK) == TRUE) {
 			//socket ready to receive things
+			printf("waiting for ack\n");
 			recvfrom(desc,ackReceive, 10, 0, (struct sockaddr *) &client, &sizeClient);
 			printf("%s\n", ackReceive);
+			/*if (acquitte < ackToInt(ackReceive)) {
+				acquitte = ackToInt(ackReceive);
+			}*/
 
 		}
+
+		/*if (acquitte != seqNum) {
+			//A FAIRE : renvoi à partir du segment numéro acquitte
+			cwnd = cwnd/2;
+		} else if (cwnd<sstresh){
+			cwnd = cwnd*2;
+		} else {
+			cwnd++;
+		}*/
 
 	}
 

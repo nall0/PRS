@@ -71,19 +71,32 @@ void ajoutDebut(char msg[], char read[], int seqNum) {
 	}
 }
 
-void sendFile(char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
+int ackToInt(char ackReceive[]) {
+	//fonction qui rend le numéro acquitté contenu dans le message recu
+
+	int i = 0;
+	char num[7];
+
+	while(i<9) {
+		num[i] = ackReceive[i+3];
+		i++;
+	}
+
+	return atoi(num);
+}
+
+void sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
 	char read[SEGSIZE-6]; //contenu lu dans le fichier
 	char msg[SEGSIZE]; //message envoyé, avec le numéro de sequence au debut
-	int seqNum = 0;
 	int sndto;
 	int readSize;
 	FILE *f1;
 	f1 = fopen(fileName,"rb");
 
-	while(feof(f1) == FALSE) {
+	while(seqNum<cwnd && feof(f1) == FALSE) {
 		readSize = fread(read, sizeof(char), SEGSIZE-1, f1);
 		ajoutDebut(msg, read, ++seqNum);
-		//printf("envoi du segment %d : \n%s\n\n",seqNum, msg);
+		printf("envoi du segment %d\n",seqNum);
 		sndto = sendto(descUtil,msg,readSize+6,0,pUtil, sizeUtilAddr);
 		handleError(sndto, "sendto");
 		memset(read,0,SEGSIZE-6);
@@ -91,5 +104,7 @@ void sendFile(char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t siz
 	}
 
 	fclose(f1);
-	sendto(descUtil,"FIN",sizeof("FIN"),0,pUtil, sizeUtilAddr);
+	if (feof(f1) == TRUE) {
+		sendto(descUtil,"FIN",sizeof("FIN"),0,pUtil, sizeUtilAddr);
+	}
 }
