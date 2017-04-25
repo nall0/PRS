@@ -45,10 +45,7 @@ void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int priva
 	sprintf(SYN_ACK, "SYN-ACK");
 	char charPrivatePort[6];
 	sprintf(charPrivatePort, "%d", privatePort); //convertion du port privé en string
-	int i=7;
-	for(i=7; i<11; i++) {
-		SYN_ACK[i] = charPrivatePort[i-7];
-	}
+	strcat(SYN_ACK, charPrivatePort);
 	sendto(desc,SYN_ACK,sizeof(SYN_ACK),0, pAddr, *pSizeAddr);
 
 	//reception de ACK
@@ -85,15 +82,18 @@ int ackToInt(char ackReceive[]) {
 	return atoi(num);
 }
 
-void sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
+int sendSeq(int cwnd, int seqNum, char *fileName, int decalage, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
+	int res = 1;	
 	char read[SEGSIZE-6]; //contenu lu dans le fichier
 	char msg[SEGSIZE]; //message envoyé, avec le numéro de sequence au debut
-	int sndto;
-	int readSize;
+	int sndto, readSize;
+	int sendingNumber = 0;
+
 	FILE *f1;
 	f1 = fopen(fileName,"rb");
+	fseek(f1, decalage, SEEK_SET);
 
-	while(seqNum<cwnd && feof(f1) == FALSE) {
+	while(sendingNumber<cwnd && feof(f1) == FALSE) {
 		readSize = fread(read, sizeof(char), SEGSIZE-1, f1);
 		ajoutDebut(msg, read, ++seqNum);
 		printf("envoi du segment %d\n",seqNum);
@@ -101,10 +101,15 @@ void sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr*
 		handleError(sndto, "sendto");
 		memset(read,0,SEGSIZE-6);
 		memset(msg,0,SEGSIZE);
+		sendingNumber++;
+	}
+
+	if (feof(f1) == TRUE) {
+		printf("envoie fin\n");
+		sendto(descUtil,"FIN",sizeof("FIN"),0,pUtil,sizeUtilAddr);
+		res = 0;
 	}
 
 	fclose(f1);
-	if (feof(f1) == TRUE) {
-		sendto(descUtil,"FIN",sizeof("FIN"),0,pUtil, sizeUtilAddr);
-	}
+	return res;
 }
