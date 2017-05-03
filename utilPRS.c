@@ -58,14 +58,7 @@ void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int priva
 }
 
 void ajoutDebut(char msg[], char read[], int seqNum) {
-	sprintf(msg, "%6d", seqNum);
-	strcat(msg, read);
-
-	int i=0;
-	while(msg[i] == ' ') {
-		msg[i] = '0';
-		i++;
-	}
+	sprintf(msg, "%6d%s", seqNum,read);
 }
 
 int ackToInt(char ackReceive[]) {
@@ -83,7 +76,7 @@ int ackToInt(char ackReceive[]) {
 }
 
 int sendSeq(int cwnd, int seqNum, char *fileName, int decalage, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
-	int res = 1;	
+	int res = 1;
 	char read[SEGSIZE-6]; //contenu lu dans le fichier
 	char msg[SEGSIZE]; //message envoyé, avec le numéro de sequence au debut
 	int sndto, readSize;

@@ -23,19 +23,19 @@ int main() {
 	int cont2 = 1;
 	int i=0;
 	struct timeval timeout;
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 150000;
+	timeout.tv_sec = 1;
+	//timeout.tv_usec = 150000;
 	struct timeval timeoutArrival;
-	timeoutArrival.tv_sec = 5;
+	timeoutArrival.tv_sec = 1;
+
+	FD_ZERO(&setSend);
+	FD_ZERO(&setReceive);
+
+	FD_SET(descHS,&setReceive);
 
 	while(1) {
-		FD_ZERO(&setSend);
-		FD_ZERO(&setReceive);
-		
-		FD_SET(descHS,&setReceive);
-		FD_SET(desc, &setReceive);
 
-		//printf("waiting for arrival\n");
+
 		ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeoutArrival);
 		handleError(ret, "select");
 
@@ -60,7 +60,7 @@ int main() {
 		//printf("waiting for send\n");
 		if(cont) {
 			//socket ready to send things
-			//printf("cwnd = %d\n", cwnd);
+			printf("cwnd = %d\n", cwnd);
 			cont = sendSeq(cwnd, seqNum, fileName, decalage, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
@@ -71,9 +71,14 @@ int main() {
 		cont2 = 1;
 		while(i<cwnd && cont2) {
 			i++;
-			select(3+nbMaxClient, &setReceive, NULL, NULL, &timeout);		
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 500000;
+			ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeout);
+			printf("select ACK : %d \n",ret);
+			handleError(ret, "select");
 			if(FD_ISSET(desc, &setReceive)) {
 				//socket ready to receive things
+				printf("receiving ACK\n");
 				recvfrom(desc,ackReceive, 10, 0, (struct sockaddr *) &client, &sizeClient);
 				printf("%s\n", ackReceive);
 				if (acquitte < ackToInt(ackReceive)) {
@@ -81,7 +86,7 @@ int main() {
 				}
 
 			} else {
-				printf("ACK dropped : cwnd = cwnd/2, et renvoi depuie acquitte\n");
+				//printf("ACK dropped : cwnd = cwnd/2, et renvoi depuie acquitte\n");
 				cont2 = 0;
 			}
 		}
@@ -90,6 +95,8 @@ int main() {
 			decalage = acquitte*SEGSIZE; //placement du curseur dans l'ouverture du fichier
 			seqNum = acquitte; //renvoi depuis le plus grand segment acquitté
 			cwnd = cwnd/2; //division de la fenetre d'envoi par deux
+			if (cwnd == 0)
+				cwnd = 1;
 		} else if (cwnd<sstresh){
 			cwnd = cwnd*2;
 		} else {
@@ -104,7 +111,13 @@ int main() {
 			cwnd = 2;
 		}
 
-	}
+
+			FD_ZERO(&setSend);
+			FD_ZERO(&setReceive);
+
+			FD_SET(descHS,&setReceive);
+			FD_SET(desc, &setReceive);
+		}
 
 
 	return 0;
