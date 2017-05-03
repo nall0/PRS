@@ -104,7 +104,6 @@ int main() {
 		if (cont == FALSE) {
 			printf("socket closed\n");
 			close(desc);
-			decalage = 0;
 			seqNum = 0;
 			cwnd = 2;
 		}
