@@ -63,15 +63,8 @@ void ajoutDebut(char msg[], char read[], int seqNum) {
 
 int ackToInt(char ackReceive[]) {
 	//fonction qui rend le numéro acquitté contenu dans le message recu
-
-	int i = 0;
 	char num[7];
-
-	while(i<9) {
-		num[i] = ackReceive[i+3];
-		i++;
-	}
-
+	sprintf(num,"%s",ackReceive+3);
 	return atoi(num);
 }
 
