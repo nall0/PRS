@@ -57,10 +57,6 @@ void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int priva
 	}
 }
 
-void ajoutDebut(char msg[], char read[], int seqNum) {
-	sprintf(msg, "%6d%s", seqNum,read);
-}
-
 int ackToInt(char ackReceive[]) {
 	//fonction qui rend le numéro acquitté contenu dans le message recu
 	char num[7];
@@ -81,8 +77,8 @@ int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* 
 	fseek(f1, decalage, SEEK_SET);
 
 	while(sendingNumber<cwnd && feof(f1) == FALSE) {
-		readSize = fread(read, sizeof(char), SEGSIZE-1, f1);
-		ajoutDebut(msg, read, ++seqNum);
+		sprintf(msg, "%6d", ++seqNum);
+		readSize = fread(msg+6, sizeof(char), SEGSIZE, f1);
 		printf("envoi du segment %d\n",seqNum);
 		sndto = sendto(descUtil,msg,readSize+6,0,pUtil, sizeUtilAddr);
 		handleError(sndto, "sendto");

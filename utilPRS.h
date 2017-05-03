@@ -22,6 +22,5 @@
 void handleError(int var, char *functionName);
 int initSocket(int* pValid, struct sockaddr_in* pAdresse, int port);
 void handshake(int desc, struct sockaddr* pAddr, socklen_t *pSizeAddr, int privatePort);
-void ajoutDebut(char msg[], char read[], int seqNum);
 int ackToInt(char ackReceive[]);
 int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr);

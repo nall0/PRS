@@ -53,9 +53,6 @@ int main() {
 			//reception du nom du fichier
 			recvfrom(desc,fileName,sizeof(fileName),0, (struct sockaddr *)&client,&sizeClient);
 			printf("Required file : |%s|\n", fileName);
-			FILE *f1;
-			f1 = fopen(fileName,"rb");
-
 		}
 
 		//printf("waiting for send\n");
