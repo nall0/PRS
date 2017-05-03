@@ -62,7 +62,7 @@ int main() {
 		if(cont) {
 			//socket ready to send things
 			printf("cwnd = %d\n", cwnd);
-			cont = sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
+			cont = sendSeq(cwnd, seqNum, f1, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
 

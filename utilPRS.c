@@ -68,7 +68,7 @@ int ackToInt(char ackReceive[]) {
 	return atoi(num);
 }
 
-int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
+int sendSeq(int cwnd, int seqNum, FILE *f1, int descUtil,struct sockaddr* pUtil, socklen_t sizeUtilAddr) {
 	int res = 1;
 	char read[SEGSIZE-6]; //contenu lu dans le fichier
 	char msg[SEGSIZE]; //message envoyé, avec le numéro de sequence au debut
@@ -76,8 +76,6 @@ int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* 
 	int sendingNumber = 0;
 	int decalage = seqNum*SEGSIZE;
 
-	FILE *f1;
-	f1 = fopen(fileName,"rb");
 	fseek(f1, decalage, SEEK_SET);
 
 	while(sendingNumber<cwnd && feof(f1) == FALSE) {
