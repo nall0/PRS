@@ -13,7 +13,6 @@ int main() {
 	int descHS = initSocket(&enableOption, &clientHS, publicPort);
 	int desc;
 	char fileName[SEGSIZE];
-	int decalage = 0;
 	int seqNum = 0;
 	char ackReceive[10];
 	int cwnd = 2; //fenetre d'envoi pour Slow Start
@@ -61,7 +60,7 @@ int main() {
 		if(cont) {
 			//socket ready to send things
 			printf("cwnd = %d\n", cwnd);
-			cont = sendSeq(cwnd, seqNum, fileName, decalage, desc,(struct sockaddr *) &client, sizeClient);
+			cont = sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
 
@@ -92,7 +91,6 @@ int main() {
 		}
 		//ACK control
 		if (acquitte != seqNum) {
-			decalage = acquitte*SEGSIZE; //placement du curseur dans l'ouverture du fichier
 			seqNum = acquitte; //renvoi depuis le plus grand segment acquitté
 			cwnd = cwnd/2; //division de la fenetre d'envoi par deux
 			if (cwnd == 0)
