@@ -1,8 +1,8 @@
 #include "utilPRS.h"
 
-int main() {
+int main(int argc, char * argv[]) {
 	struct sockaddr_in clientHS, client;
-	int publicPort = 2000;
+	int publicPort = atoi(argv[1]);
 	int privatePort = publicPort;
 	int enableOption = 1;
 	socklen_t sizeClientHS = sizeof(clientHS);
@@ -21,16 +21,18 @@ int main() {
 	int cont = 1;
 	int cont2 = 1;
 	int i=0;
+	struct timeval rtt;
+	rtt.tv_sec = 0;
+	rtt.tv_usec = 200000;
 	struct timeval timeout;
-	timeout.tv_sec = 1;
-	//timeout.tv_usec = 150000;
 	struct timeval timeoutArrival;
 	timeoutArrival.tv_sec = 1;
+	struct timeval t1,t2;
 
 	FD_ZERO(&setSend);
 	FD_ZERO(&setReceive);
 
-	FD_SET(descHS,&setReceive);
+	FD_SET(descHS,&setReceive); 	
 
 	while(1) {
 
@@ -68,8 +70,10 @@ int main() {
 		cont2 = 1;
 		while(i<cwnd && cont2) {
 			i++;
-			timeout.tv_sec = 0;
-			timeout.tv_usec = 50000;
+			
+			if (i==1)
+				gettimeofday(&t1,NULL);
+			timeout = rtt;
 			ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeout);
 			printf("select ACK : %d \n",ret);
 			handleError(ret, "select");
@@ -77,6 +81,13 @@ int main() {
 				//socket ready to receive things
 				printf("receiving ACK\n");
 				recvfrom(desc,ackReceive, 10, 0, (struct sockaddr *) &client, &sizeClient);
+				if (i==1) {
+					gettimeofday(&t2,NULL);
+					calcRTT(t1,t2,&rtt);
+					
+					printf("rtt = %d s%d us\n", (int) rtt.tv_sec, (int)rtt.tv_usec );
+				}
+
 				printf("%s\n", ackReceive);
 				if (acquitte < ackToInt(ackReceive)) {
 					acquitte = ackToInt(ackReceive);

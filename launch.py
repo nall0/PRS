@@ -10,12 +10,12 @@ output_file= "output.txt"
 
 name= server_name.split("-")
 suffix= name[0][-2:]
-
-client_name= "client"+suffix
+print suffix
+client_name= "client2"
 
 output= open(output_file, "a")
 
-server_launch_command= "./" +server_name +" " +server_port +" &"
+server_launch_command= "./" +server_name +" &"
 client_launch_command= "./" +client_name +" " +ip_address +" " +server_port +" " +file_name + " 0"
 
 os.system(server_launch_command)
@@ -25,7 +25,7 @@ os.system(client_launch_command)
 end_time= time.time()
 delta= end_time- start_time
 
-copy_file_name= "./copy_" +file_name
+copy_file_name= "copy_" +file_name
 statinfo= os.stat(copy_file_name)
 
 time.sleep(1)

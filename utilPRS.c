@@ -97,3 +97,32 @@ int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* 
 	fclose(f1);
 	return res;
 }
+
+
+double timeval_substract(struct timeval *x, struct timeval *y)  
+{  
+    double diff = x->tv_sec - y->tv_sec;  
+    diff += (x->tv_usec - y->tv_usec)/1000000.0;  
+
+    return diff;  
+}
+
+int calcRTT( struct timeval t1, struct timeval t2, struct timeval *pRTT) {
+	
+	double newRTT = timeval_substract(&t2,&t1);
+	double oldRTT = timevalToDouble(*pRTT);
+	newRTT = (1-ALPHA)*oldRTT + ALPHA * newRTT;
+	doubleToTimeval(newRTT,pRTT);
+	return 0;
+}
+
+int doubleToTimeval (double time, struct timeval *pTime) {
+	pTime->tv_sec = (int) floor(time);
+	pTime->tv_usec = (int) 1000000*(time - floor(time));
+	return 0;
+}
+
+double timevalToDouble (struct timeval time) {
+	double t = time.tv_sec + time.tv_usec/1000000.0;
+    return t;
+}
