@@ -17,7 +17,7 @@ int main() {
 	char ackReceive[10];
 	int cwnd = 2; //fenetre d'envoi pour Slow Start
 	int sstresh = 50; //seuil avant de passer en congestion avoidance
-	int acquitte = 0;
+	int acquitte = 0; //segment maximum acquitté par le client
 	int cont = 1;
 	int cont2 = 1;
 	int i=0;
@@ -33,7 +33,6 @@ int main() {
 	FD_SET(descHS,&setReceive);
 
 	while(1) {
-
 
 		ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeoutArrival);
 		handleError(ret, "select");
@@ -55,14 +54,13 @@ int main() {
 			printf("Required file : |%s|\n", fileName);
 		}
 
-		//printf("waiting for send\n");
+		//sending
 		if(cont) {
 			//socket ready to send things
 			cont = sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
 
-		//printf("waiting for ack\n");
 		//reception des ACK
 		i = 0;
 		cont2 = 1;
@@ -100,6 +98,7 @@ int main() {
 
 		//end of transmission
 		if (cont == FALSE && acquitte == seqNum) {
+			printf("acquitte = %d   seqNum = %d\n", acquitte, seqNum);
 			printf("envoie fin\n");
 			sendto(desc,"FIN",sizeof("FIN"),0,(struct sockaddr *) &client, sizeClient);
 			printf("socket closed\n");
