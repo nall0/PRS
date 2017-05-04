@@ -58,7 +58,6 @@ int main() {
 		//printf("waiting for send\n");
 		if(cont) {
 			//socket ready to send things
-			printf("cwnd = %d\n", cwnd);
 			cont = sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
@@ -72,11 +71,9 @@ int main() {
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 500000;
 			ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeout);
-			printf("select ACK : %d \n",ret);
 			handleError(ret, "select");
 			if(FD_ISSET(desc, &setReceive)) {
 				//socket ready to receive things
-				printf("receiving ACK\n");
 				recvfrom(desc,ackReceive, 10, 0, (struct sockaddr *) &client, &sizeClient);
 				printf("%s\n", ackReceive);
 				if (acquitte < ackToInt(ackReceive)) {
@@ -88,6 +85,7 @@ int main() {
 				cont2 = 0;
 			}
 		}
+
 		//ACK control
 		if (acquitte != seqNum) {
 			seqNum = acquitte; //renvoi depuis le plus grand segment acquitté
@@ -99,14 +97,16 @@ int main() {
 		} else {
 			cwnd++;
 		}
+
 		//end of transmission
-		if (cont == FALSE) {
+		if (cont == FALSE && acquitte == seqNum) {
+			printf("envoie fin\n");
+			sendto(desc,"FIN",sizeof("FIN"),0,(struct sockaddr *) &client, sizeClient);
 			printf("socket closed\n");
 			close(desc);
 			seqNum = 0;
 			cwnd = 2;
 		}
-
 
 			FD_ZERO(&setSend);
 			FD_ZERO(&setReceive);
@@ -114,7 +114,6 @@ int main() {
 			FD_SET(descHS,&setReceive);
 			FD_SET(desc, &setReceive);
 		}
-
 
 	return 0;
 }
