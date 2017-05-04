@@ -1,4 +1,4 @@
-all: server test
+all: server 
 
 utilPRS.o : utilPRS.c utilPRS.h
 	gcc -Wall -c utilPRS.c

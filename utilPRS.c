@@ -70,16 +70,17 @@ int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* 
 	char msg[SEGSIZE]; //message envoyé, avec le numéro de sequence au debut
 	int sndto, readSize;
 	int sendingNumber = 0;
-	int decalage = seqNum*SEGSIZE;
+	int decalage = seqNum*SAMPLESIZE;
 
 	FILE *f1;
 	f1 = fopen(fileName,"rb");
 	fseek(f1, decalage, SEEK_SET);
+	
 
 	while(sendingNumber<cwnd && feof(f1) == FALSE) {
 		sprintf(msg, "%6d", ++seqNum);
-		readSize = fread(msg+6, sizeof(char), SEGSIZE, f1);
-		printf("CWND = %d         envoi du segment %d\n",cwnd,seqNum);
+		readSize = fread(msg+6, sizeof(char), SAMPLESIZE, f1);
+		printf("envoi du segment %d\n",seqNum);
 		sndto = sendto(descUtil,msg,readSize+6,0,pUtil, sizeUtilAddr);
 		handleError(sndto, "sendto");
 		memset(read,0,SEGSIZE-6);
@@ -88,6 +89,8 @@ int sendSeq(int cwnd, int seqNum, char *fileName, int descUtil,struct sockaddr* 
 	}
 
 	if (feof(f1) == TRUE) {
+		printf("envoie fin\n");
+		sendto(descUtil,"FIN",sizeof("FIN"),0,pUtil,sizeUtilAddr);
 		res = 0;
 	}
 

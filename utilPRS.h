@@ -8,9 +8,8 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
-#define RCVSIZE 1024
-#define SEGSIZE 1006
 #define SAMPLESIZE 1000
+#define SEGSIZE SAMPLESIZE + 6
 #define NUMSEG 6
 #define SYN 1
 #define ACK 2

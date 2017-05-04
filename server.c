@@ -17,7 +17,7 @@ int main() {
 	char ackReceive[10];
 	int cwnd = 2; //fenetre d'envoi pour Slow Start
 	int sstresh = 50; //seuil avant de passer en congestion avoidance
-	int acquitte = 0; //segment maximum acquitté par le client
+	int acquitte = 0;
 	int cont = 1;
 	int cont2 = 1;
 	int i=0;
@@ -33,6 +33,7 @@ int main() {
 	FD_SET(descHS,&setReceive);
 
 	while(1) {
+
 
 		ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeoutArrival);
 		handleError(ret, "select");
@@ -57,6 +58,7 @@ int main() {
 		//sending
 		if(cont) {
 			//socket ready to send things
+			printf("cwnd = %d\n", cwnd);
 			cont = sendSeq(cwnd, seqNum, fileName, desc,(struct sockaddr *) &client, sizeClient);
 			seqNum = seqNum + cwnd;
 		}
@@ -67,11 +69,13 @@ int main() {
 		while(i<cwnd && cont2) {
 			i++;
 			timeout.tv_sec = 0;
-			timeout.tv_usec = 500000;
+			timeout.tv_usec = 50000;
 			ret = select(3+nbMaxClient, &setReceive, NULL, NULL, &timeout);
+			printf("select ACK : %d \n",ret);
 			handleError(ret, "select");
 			if(FD_ISSET(desc, &setReceive)) {
 				//socket ready to receive things
+				printf("receiving ACK\n");
 				recvfrom(desc,ackReceive, 10, 0, (struct sockaddr *) &client, &sizeClient);
 				printf("%s\n", ackReceive);
 				if (acquitte < ackToInt(ackReceive)) {
@@ -79,11 +83,10 @@ int main() {
 				}
 
 			} else {
-				//printf("ACK dropped : cwnd = cwnd/2, et renvoi depuie acquitte\n");
+				//ACK
 				cont2 = 0;
 			}
 		}
-
 		//ACK control
 		if (acquitte != seqNum) {
 			seqNum = acquitte; //renvoi depuis le plus grand segment acquitté
@@ -95,17 +98,14 @@ int main() {
 		} else {
 			cwnd++;
 		}
-
 		//end of transmission
-		if (cont == FALSE && acquitte == seqNum) {
-			printf("acquitte = %d   seqNum = %d\n", acquitte, seqNum);
-			printf("envoie fin\n");
-			sendto(desc,"FIN",sizeof("FIN"),0,(struct sockaddr *) &client, sizeClient);
+		if (cont == FALSE) {
 			printf("socket closed\n");
 			close(desc);
 			seqNum = 0;
 			cwnd = 2;
 		}
+
 
 			FD_ZERO(&setSend);
 			FD_ZERO(&setReceive);
@@ -113,6 +113,7 @@ int main() {
 			FD_SET(descHS,&setReceive);
 			FD_SET(desc, &setReceive);
 		}
+
 
 	return 0;
 }
